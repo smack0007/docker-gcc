@@ -1,0 +1,26 @@
+name: Publish Docker image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Dockerfile"
+  pull_request: {}
+
+env:
+  DOCKER_IMAGE_NAME: smack0007/gcc
+
+jobs:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Build and push Docker image
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login docker.io -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          sudo docker build . -t ${{ env.DOCKER_IMAGE_NAME }}:latest -t ${{ env.DOCKER_IMAGE_NAME }}:sha-$(git rev-parse HEAD) --label sha=$(git rev-parse HEAD)
+          sudo docker image push ${{ env.DOCKER_IMAGE_NAME }} -a
